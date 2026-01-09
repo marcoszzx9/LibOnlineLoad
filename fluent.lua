@@ -50,32 +50,71 @@ local Flags = {
     KillAura = false
 }
 
---// Window
+--// Window - CONFIGURAÇÃO SIMPLIFICADA
 local Window = Fluent:CreateWindow({
     Title = "Hypershoot | Private",
     SubTitle = "Executor: " .. executor,
     TabWidth = 160,
-    Size = UDim2.fromOffset(600, 480),
+    Size = UDim2.fromOffset(580, 460), -- Tamanho ligeiramente menor
     Acrylic = false,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
+print("✓ Janela Fluent criada")
+
 --// Tabs
 local Tabs = {
-    Combat = Window:AddTab({ Title = "Combat", Icon = "crosshair" }),
-    Visual = Window:AddTab({ Title = "Visual", Icon = "eye" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "box" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+    Combat = Window:AddTab({ Title = "Combat", Icon = "" }), -- Removido ícone
+    Visual = Window:AddTab({ Title = "Visual", Icon = "" }),
+    Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "" })
 }
 
+print("✓ Tabs criadas")
+
 ------------------------------------------------
--- INFO
+-- INFO - MAIS SIMPLES
 ------------------------------------------------
-Tabs.Combat:AddParagraph({
+local infoParagraph = Tabs.Combat:AddParagraph({
     Title = "Account Info",
     Content = "User: " .. LP.Name .. "\nUserId: " .. LP.UserId .. "\nExecutor: " .. executor
 })
+
+print("✓ Paragraph adicionado")
+
+------------------------------------------------
+-- TESTE SIMPLES PRIMEIRO
+------------------------------------------------
+local testToggle = Tabs.Combat:AddToggle("TestToggle", {
+    Title = "Test Toggle",
+    Default = false,
+    Callback = function(v)
+        print("Test Toggle:", v)
+        Fluent:Notify({
+            Title = "Toggle",
+            Content = "Valor: " .. tostring(v),
+            Duration = 2
+        })
+    end
+})
+
+print("✓ Test Toggle adicionado")
+
+local testButton = Tabs.Combat:AddButton({
+    Title = "Test Button",
+    Description = "Clique para testar",
+    Callback = function()
+        print("Botão test clicado!")
+        Fluent:Notify({
+            Title = "Teste",
+            Content = "Botão funcionando!",
+            Duration = 3
+        })
+    end
+})
+
+print("✓ Test Button adicionado")
 
 ------------------------------------------------
 -- UTILS
@@ -107,8 +146,116 @@ local function getClosestEnemy()
 end
 
 ------------------------------------------------
--- AIMBOT
+-- BOTÕES REAIS DO CHEAT
 ------------------------------------------------
+
+-- AIMBOT
+local aimbotToggle = Tabs.Combat:AddToggle("AimbotToggle", {
+    Title = "Aimbot (RMB)",
+    Default = false,
+    Callback = function(v)
+        Flags.Aimbot = v
+        print("Aimbot:", v)
+        Fluent:Notify({
+            Title = "Aimbot",
+            Content = v and "Ativado" or "Desativado",
+            Duration = 2
+        })
+    end
+})
+
+print("✓ Aimbot Toggle adicionado")
+
+-- AIM SILENT
+local aimSilentToggle = Tabs.Combat:AddToggle("AimSilentToggle", {
+    Title = "Aim Silent",
+    Default = false,
+    Callback = function(v)
+        Flags.AimSilent = v
+        print("Aim Silent:", v)
+    end
+})
+
+print("✓ Aim Silent Toggle adicionado")
+
+-- KILL AURA
+local killAuraToggle = Tabs.Combat:AddToggle("KillAuraToggle", {
+    Title = "Kill Aura",
+    Default = false,
+    Callback = function(v)
+        Flags.KillAura = v
+        print("Kill Aura:", v)
+    end
+})
+
+print("✓ Kill Aura Toggle adicionado")
+
+-- ESP
+local espToggle = Tabs.Visual:AddToggle("ESPToggle", {
+    Title = "ESP",
+    Default = false,
+    Callback = function(v)
+        Flags.ESP = v
+        print("ESP:", v)
+        Fluent:Notify({
+            Title = "ESP",
+            Content = v and "Ativado" or "Desativado",
+            Duration = 2
+        })
+    end
+})
+
+print("✓ ESP Toggle adicionado")
+
+-- HITBOX
+local hitboxToggle = Tabs.Visual:AddToggle("HitboxToggle", {
+    Title = "Hitbox Expander",
+    Default = false,
+    Callback = function(v)
+        Flags.Hitbox = v
+        print("Hitbox:", v)
+    end
+})
+
+print("✓ Hitbox Toggle adicionado")
+
+-- SLIDER DE EXEMPLO
+local exampleSlider = Tabs.Misc:AddSlider("ExampleSlider", {
+    Title = "Example Slider",
+    Description = "Apenas para teste visual",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Rounding = 0,
+    Callback = function(Value)
+        print("Slider:", Value)
+    end
+})
+
+print("✓ Example Slider adicionado")
+
+-- DROPDOWN DE EXEMPLO
+local exampleDropdown = Tabs.Misc:AddDropdown("ExampleDropdown", {
+    Title = "Example Dropdown",
+    Values = {"Option 1", "Option 2", "Option 3"},
+    Default = 1,
+    Callback = function(Value)
+        print("Dropdown:", Value)
+        Fluent:Notify({
+            Title = "Dropdown",
+            Content = "Selecionado: " .. Value,
+            Duration = 2
+        })
+    end
+})
+
+print("✓ Example Dropdown adicionado")
+
+------------------------------------------------
+-- FUNÇÕES DO CHEAT
+------------------------------------------------
+
+-- AIMBOT
 RunService.RenderStepped:Connect(function()
     if Flags.Aimbot and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         local t = getClosestEnemy()
@@ -118,9 +265,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-------------------------------------------------
 -- AIMSILENT
-------------------------------------------------
 local old
 old = hookmetamethod(game, "__index", function(self, key)
     if Flags.AimSilent and self == Mouse and key == "Hit" then
@@ -132,9 +277,7 @@ old = hookmetamethod(game, "__index", function(self, key)
     return old(self, key)
 end)
 
-------------------------------------------------
 -- HITBOX
-------------------------------------------------
 RunService.Heartbeat:Connect(function()
     if not Flags.Hitbox then return end
     for _, p in pairs(Players:GetPlayers()) do
@@ -149,9 +292,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-------------------------------------------------
 -- ESP
-------------------------------------------------
 local ESPCache = {}
 
 local function clearESP()
@@ -181,9 +322,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-------------------------------------------------
 -- KILL AURA
-------------------------------------------------
 RunService.Heartbeat:Connect(function()
     if not Flags.KillAura then return end
     local lhrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
@@ -199,64 +338,6 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
-
-------------------------------------------------
--- UI TOGGLES
-------------------------------------------------
-Tabs.Combat:AddToggle("Aimbot", {
-    Title = "Aimbot (RMB)",
-    Default = false,
-    Callback = function(v) Flags.Aimbot = v end
-})
-
-Tabs.Combat:AddToggle("AimSilent", {
-    Title = "Aim Silent",
-    Default = false,
-    Callback = function(v) Flags.AimSilent = v end
-})
-
-Tabs.Combat:AddToggle("KillAura", {
-    Title = "Kill Aura",
-    Default = false,
-    Callback = function(v) Flags.KillAura = v end
-})
-
-Tabs.Visual:AddToggle("ESP", {
-    Title = "ESP",
-    Default = false,
-    Callback = function(v) Flags.ESP = v end
-})
-
-Tabs.Visual:AddToggle("Hitbox", {
-    Title = "Hitbox Expander",
-    Default = false,
-    Callback = function(v) Flags.Hitbox = v end
-})
-
--- Adicione mais elementos de exemplo se a UI não aparecer
-Tabs.Misc:AddButton({
-    Title = "Test Button",
-    Description = "Clique para testar",
-    Callback = function()
-        Fluent:Notify({
-            Title = "Teste",
-            Content = "Botão funcionando!",
-            Duration = 3
-        })
-    end
-})
-
-Tabs.Misc:AddSlider("TestSlider", {
-    Title = "Test Slider",
-    Description = "Apenas para teste",
-    Min = 0,
-    Max = 100,
-    Default = 50,
-    Rounding = 0,
-    Callback = function(Value)
-        print("Slider value:", Value)
-    end
-})
 
 ------------------------------------------------
 -- OPTIONS
@@ -276,26 +357,35 @@ SaveManager:SetFolder("HypershootFluent/configs")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
 
-Window:SelectTab(1)
+-- Forçar atualização da UI
+task.spawn(function()
+    task.wait(0.5)
+    Window:SelectTab(1)
+    
+    Fluent:Notify({
+        Title = "Hypershoot Loaded",
+        Content = "UI carregada com sucesso!",
+        Duration = 5
+    })
+    
+    print("✅ Script completamente carregado")
+    print("✅ Tabs disponíveis:", #Window.tabs)
+    print("✅ Use LeftControl para minimizar")
+    
+    -- Verificar se os elementos estão visíveis
+    for i, tab in pairs(Window.tabs) do
+        print("Tab " .. i .. ": " .. tab.data.Title)
+        print("  Elementos: " .. (tab.unloaded and "não carregados" or "carregados"))
+    end
+end)
 
+-- Mostrar notificação inicial
 Fluent:Notify({
-    Title = "Loaded",
-    Content = "Hypershoot carregado com sucesso!",
-    Duration = 5
+    Title = "Carregando...",
+    Content = "Inicializando Hypershoot",
+    Duration = 2
 })
 
-print("Script carregado completamente")
-warn("Hypershoot UI deve aparecer agora")
-
--- Verificação final
-if Window then
-    print("✓ Janela criada com sucesso")
-else
-    warn("✗ Falha ao criar janela")
-end
-
-if Tabs.Combat then
-    print("✓ Tab Combat criada")
-else
-    warn("✗ Falha ao criar tab Combat")
-end
+print("🎮 Hypershoot Script Iniciado")
+print("🎯 Executor: " .. executor)
+print("👤 Player: " .. LP.Name)
