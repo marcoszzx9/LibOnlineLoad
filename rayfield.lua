@@ -1,143 +1,257 @@
---// SERVICES
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
+--// RAYFIELD
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
---// EXECUTOR DETECTION
+--// EXECUTOR DETECT
 local executor =
     identifyexecutor and identifyexecutor()
     or getexecutorname and getexecutorname()
-    or "Xeno / Unknown"
+    or "Unknown"
 
---// GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "HypershootUI"
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ResetOnSpawn = false
+--// WINDOW
+local Window = Rayfield:CreateWindow({
+    Name = "Hypershoot | Private Test Panel",
+    LoadingTitle = "Hypershoot",
+    LoadingSubtitle = "Anti-Cheat Testing Build",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "Hypershoot",
+        FileName = "PrivatePanel"
+    },
+    Theme = "Dark"
+})
 
---// MAIN FRAME
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 520, 0, 340)
-Main.Position = UDim2.new(0.5, -260, 0.5, -170)
-Main.BackgroundColor3 = Color3.fromRGB(0,0,0)
-Main.BackgroundTransparency = 0.4
-Main.BorderSizePixel = 0
-Main.Active = true
-Main.Draggable = true
+--// TABS
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local VisualTab = Window:CreateTab("Visual", 4483362458)
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+local MiscTab   = Window:CreateTab("Misc",   4483362458)
 
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0,12)
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
 
---// TOP BAR
-local Top = Instance.new("Frame", Main)
-Top.Size = UDim2.new(1,0,0,50)
-Top.BackgroundTransparency = 1
+local LP = Players.LocalPlayer
+local Mouse = LP:GetMouse()
 
---// PROFILE IMAGE
-local Thumb = Instance.new("ImageLabel", Top)
-Thumb.Size = UDim2.new(0,36,0,36)
-Thumb.Position = UDim2.new(0,10,0,7)
-Thumb.BackgroundTransparency = 1
-Thumb.Image = "rbxthumb://type=AvatarHeadShot&id="..LocalPlayer.UserId.."&w=150&h=150"
-Instance.new("UICorner", Thumb).CornerRadius = UDim.new(1,0)
+--// INFO
+CombatTab:CreateParagraph({
+    Title = "Account Info",
+    Content =
+        "User: "..LP.Name..
+        "\nUserId: "..LP.UserId..
+        "\nExecutor: "..executor
+})
 
---// NAME
-local NameLabel = Instance.new("TextLabel", Top)
-NameLabel.Text = LocalPlayer.Name
-NameLabel.Position = UDim2.new(0,55,0,6)
-NameLabel.Size = UDim2.new(0,200,0,20)
-NameLabel.TextColor3 = Color3.new(1,1,1)
-NameLabel.BackgroundTransparency = 1
-NameLabel.Font = Enum.Font.GothamBold
-NameLabel.TextSize = 16
-NameLabel.TextXAlignment = Left
+--// FLAGS
+local Flags = {
+    Aimbot = false,
+    AimSilent = false,
+    Hitbox = false,
+    ESP = false,
+    KillAura = false,
+    InfiniteAmmo = false,
+    FastReload = false,
+    SpeedShoot = false,
+    NoRecoil = false,
+    NoCooldown = false
+}
 
---// EXECUTOR LABEL
-local ExecLabel = Instance.new("TextLabel", Top)
-ExecLabel.Text = "Executor: "..executor
-ExecLabel.Position = UDim2.new(0,55,0,26)
-ExecLabel.Size = UDim2.new(0,300,0,16)
-ExecLabel.TextColor3 = Color3.fromRGB(180,180,180)
-ExecLabel.BackgroundTransparency = 1
-ExecLabel.Font = Enum.Font.Gotham
-ExecLabel.TextSize = 13
-ExecLabel.TextXAlignment = Left
-
---// TAB BAR
-local Tabs = Instance.new("Frame", Main)
-Tabs.Position = UDim2.new(0,0,0,55)
-Tabs.Size = UDim2.new(0,120,1,-55)
-Tabs.BackgroundTransparency = 1
-
---// CONTENT
-local Pages = Instance.new("Frame", Main)
-Pages.Position = UDim2.new(0,130,0,55)
-Pages.Size = UDim2.new(1,-140,1,-65)
-Pages.BackgroundTransparency = 1
-
---// TAB SYSTEM
-local TabButtons = {}
-local PagesList = {}
-
-local function createTab(name)
-    local btn = Instance.new("TextButton", Tabs)
-    btn.Size = UDim2.new(1,-10,0,36)
-    btn.Position = UDim2.new(0,5,0,#TabButtons*40)
-    btn.Text = name
-    btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-    btn.BackgroundTransparency = 0.3
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 14
-    btn.BorderSizePixel = 0
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-
-    local page = Instance.new("Frame", Pages)
-    page.Size = UDim2.new(1,0,1,0)
-    page.Visible = false
-    page.BackgroundTransparency = 1
-
-    btn.MouseButton1Click:Connect(function()
-        for _,p in pairs(PagesList) do p.Visible = false end
-        page.Visible = true
-    end)
-
-    table.insert(TabButtons, btn)
-    table.insert(PagesList, page)
-
-    return page
+------------------------------------------------
+-- UTILS
+------------------------------------------------
+local function isEnemy(char)
+    return char
+        and char:FindFirstChild("Humanoid")
+        and char:GetAttribute("Team") ~= LP.Character:GetAttribute("Team")
 end
 
---// CREATE TABS
-local Combat = createTab("Combat")
-local Visual = createTab("Visual")
-local Player = createTab("Player")
-local Misc = createTab("Misc")
-
-PagesList[1].Visible = true
-
---// TOGGLE CREATOR
-local function createToggle(parent, text, y, callback)
-    local toggle = Instance.new("TextButton", parent)
-    toggle.Size = UDim2.new(0,200,0,30)
-    toggle.Position = UDim2.new(0,10,0,y)
-    toggle.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    toggle.Text = "[ OFF ] "..text
-    toggle.TextColor3 = Color3.new(1,1,1)
-    toggle.Font = Enum.Font.Gotham
-    toggle.TextSize = 14
-    toggle.BorderSizePixel = 0
-    Instance.new("UICorner", toggle).CornerRadius = UDim.new(0,6)
-
-    local state = false
-    toggle.MouseButton1Click:Connect(function()
-        state = not state
-        toggle.Text = (state and "[ ON ] " or "[ OFF ] ")..text
-        callback(state)
-    end)
+local function getClosestEnemy()
+    local closest, dist = nil, math.huge
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character and p.Character:FindFirstChild("Head") then
+            if isEnemy(p.Character) then
+                local pos, onScreen = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                if onScreen then
+                    local mag = (Vector2.new(pos.X,pos.Y) - UIS:GetMouseLocation()).Magnitude
+                    if mag < dist and mag < 200 then
+                        dist = mag
+                        closest = p
+                    end
+                end
+            end
+        end
+    end
+    return closest
 end
 
---// EXAMPLE TOGGLES
-createToggle(Combat, "Aimbot", 10, function(v) print("Aimbot:",v) end)
-createToggle(Combat, "AimSilent", 50, function(v) print("AimSilent:",v) end)
+------------------------------------------------
+-- AIMBOT
+------------------------------------------------
+RunService.RenderStepped:Connect(function()
+    if Flags.Aimbot and UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+        local t = getClosestEnemy()
+        if t and t.Character then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, t.Character.Head.Position)
+        end
+    end
+end)
 
-createToggle(Visual, "ESP", 10, functio
+------------------------------------------------
+-- AIMSILENT
+------------------------------------------------
+local old
+old = hookmetamethod(game, "__index", function(self, key)
+    if Flags.AimSilent and self == Mouse and key == "Hit" then
+        local t = getClosestEnemy()
+        if t and t.Character then
+            return t.Character.Head.CFrame
+        end
+    end
+    return old(self, key)
+end)
+
+------------------------------------------------
+-- HITBOX
+------------------------------------------------
+RunService.Heartbeat:Connect(function()
+    if not Flags.Hitbox then return end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character and isEnemy(p.Character) then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.Size = Vector3.new(8,8,8)
+                hrp.Transparency = 0.5
+                hrp.Material = Enum.Material.Neon
+                hrp.CanCollide = false
+            end
+        end
+    end
+end)
+
+------------------------------------------------
+-- ESP
+------------------------------------------------
+local ESPCache = {}
+
+local function applyESP(char)
+    if ESPCache[char] then return end
+    local hl = Instance.new("Highlight")
+    hl.FillColor = Color3.fromRGB(255,0,0)
+    hl.OutlineColor = Color3.fromRGB(255,255,255)
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = char
+    ESPCache[char] = hl
+end
+
+local function clearESP()
+    for _, v in pairs(ESPCache) do
+        if v then v:Destroy() end
+    end
+    ESPCache = {}
+end
+
+------------------------------------------------
+-- KILL AURA
+------------------------------------------------
+RunService.Heartbeat:Connect(function()
+    if not Flags.KillAura then return end
+    local lhrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    if not lhrp then return end
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LP and p.Character and isEnemy(p.Character) then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChild("Humanoid")
+            if hrp and hum and (hrp.Position - lhrp.Position).Magnitude < 12 then
+                hum.Health = 0
+            end
+        end
+    end
+end)
+
+------------------------------------------------
+-- AMMO / RECOIL / COOLDOWN
+------------------------------------------------
+local function applyGC()
+    for _, v in next, getgc(true) do
+        if typeof(v) == "table" then
+            if Flags.InfiniteAmmo and rawget(v,"Ammo") then
+                rawset(v,"Ammo", math.huge)
+            end
+            if Flags.FastReload and rawget(v,"ReloadTime") then
+                rawset(v,"ReloadTime", 0.05)
+            end
+            if Flags.NoRecoil and rawget(v,"Spread") then
+                rawset(v,"Spread",0)
+                rawset(v,"BaseSpread",0)
+            end
+            if Flags.NoCooldown and rawget(v,"CD") then
+                rawset(v,"CD",0)
+            end
+        end
+    end
+end
+
+------------------------------------------------
+-- SPEED ON SHOOT
+------------------------------------------------
+local function hookTool(tool)
+    if tool:IsA("Tool") then
+        tool.Activated:Connect(function()
+            if Flags.SpeedShoot then
+                local hum = LP.Character and LP.Character:FindFirstChild("Humanoid")
+                if hum then
+                    hum.WalkSpeed = 40
+                    task.delay(0.25,function()
+                        hum.WalkSpeed = 16
+                    end)
+                end
+            end
+        end)
+    end
+end
+
+LP.CharacterAdded:Connect(function(char)
+    char.ChildAdded:Connect(hookTool)
+end)
+
+------------------------------------------------
+-- RENDER LOOP
+------------------------------------------------
+RunService.RenderStepped:Connect(function()
+    if Flags.ESP then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LP and p.Character and isEnemy(p.Character) then
+                applyESP(p.Character)
+            end
+        end
+    else
+        clearESP()
+    end
+    applyGC()
+end)
+
+------------------------------------------------
+-- RAYFIELD TOGGLES
+------------------------------------------------
+CombatTab:CreateToggle({Name="Aimbot (RMB)", Callback=function(v) Flags.Aimbot=v end})
+CombatTab:CreateToggle({Name="AimSilent", Callback=function(v) Flags.AimSilent=v end})
+CombatTab:CreateToggle({Name="Hitbox Expander", Callback=function(v) Flags.Hitbox=v end})
+CombatTab:CreateToggle({Name="Kill Aura", Callback=function(v) Flags.KillAura=v end})
+
+VisualTab:CreateToggle({Name="ESP", Callback=function(v) Flags.ESP=v end})
+
+PlayerTab:CreateToggle({Name="Infinite Ammo", Callback=function(v) Flags.InfiniteAmmo=v end})
+PlayerTab:CreateToggle({Name="Fast Reload", Callback=function(v) Flags.FastReload=v end})
+PlayerTab:CreateToggle({Name="Speed Boost on Shoot", Callback=function(v) Flags.SpeedShoot=v end})
+PlayerTab:CreateToggle({Name="No Recoil", Callback=function(v) Flags.NoRecoil=v end})
+PlayerTab:CreateToggle({Name="No Ability Cooldown", Callback=function(v) Flags.NoCooldown=v end})
+
+MiscTab:CreateButton({
+    Name = "Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end
+})
